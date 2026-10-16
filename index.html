@@ -1,0 +1,1551 @@
+<!DOCTYPE html>
+<html lang="th" id="htmlRoot" class="h-full bg-slate-50 text-slate-800 font-sans transition-colors duration-200">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard ระบบติดตามการแก้ไขเลขปฏิบัติการ ศูนย์รับแจ้งเหตุและสั่งการ 1669 บุรีรัมย์</title>
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0fdfa',
+                            100: '#ccfbf1',
+                            500: '#14b8a6',
+                            600: '#0d9488',
+                            700: '#0f766e',
+                            800: '#115e59',
+                            900: '#134e4a',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Sarabun', 'Prompt', 'Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Google Fonts: Prompt & Sarabun -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- PapaParse CSV Parser CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+
+    <style>
+        body {
+            font-family: 'Prompt', 'Sarabun', sans-serif;
+        }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        .pulse-emerald {
+            box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+            animation: pulse-emerald 2s infinite;
+        }
+        @keyframes pulse-emerald {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
+    </style>
+</head>
+<body class="h-full text-slate-800 flex flex-col min-h-screen">
+
+    <!-- Navigation / Header -->
+    <header class="bg-gradient-to-r from-teal-900 via-teal-800 to-slate-900 text-white shadow-lg sticky top-0 z-30">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                <!-- Brand Title -->
+                <div class="flex items-center space-x-3">
+                    <div class="relative flex-shrink-0">
+                        <img src="a7c979d6-9299-4f6c-b11f-441a001ce79d_2.jpg" 
+                             alt="ตราศูนย์รับแจ้งเหตุและสั่งการ 1669 บุรีรัมย์" 
+                             class="w-12 h-12 md:w-14 md:h-14 rounded-full object-contain bg-white p-1 shadow-md border-2 border-teal-300/60 transition-transform hover:scale-105"
+                             onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'w-12 h-12 md:w-14 md:h-14 rounded-full bg-gradient-to-br from-red-600 via-blue-900 to-teal-800 border-2 border-amber-400/80 flex items-center justify-center text-white text-xl font-extrabold shadow-md\'><i class=\'fa-solid fa-phone-volume text-amber-300\'></i></div>';">
+                    </div>
+                    <div>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <h1 class="text-lg md:text-xl font-bold tracking-tight text-white">ระบบติดตามการแก้ไขเลขปฏิบัติการ ศูนย์รับแจ้งเหตุและสั่งการ 1669 บุรีรัมย์</h1>
+                            <span class="bg-teal-500/20 text-teal-300 text-xs px-2.5 py-0.5 rounded-full border border-teal-400/30 font-medium">Real-time</span>
+                        </div>
+                        <p class="text-xs text-teal-200/80">Dashboard ตรวจสอบและวิเคราะห์คำร้องแก้ไขข้อมูล รพ. <span id="lastRefreshedTimeText" class="ml-2 text-teal-300/90 font-mono"></span></p>
+                    </div>
+                </div>
+
+                <!-- Live Sync & Actions -->
+                <div class="flex flex-wrap items-center gap-2 sm:gap-3 text-xs sm:text-sm">
+                    <!-- Live Status Indicator -->
+                    <div id="connectionStatus" class="flex items-center space-x-2 bg-slate-800/80 px-3 py-1.5 rounded-lg border border-slate-700">
+                        <span id="statusPing" class="w-2.5 h-2.5 rounded-full bg-emerald-500 pulse-emerald"></span>
+                        <span id="statusText" class="text-slate-300 font-medium">กำลังโหลดข้อมูล...</span>
+                    </div>
+
+                    <!-- Auto Refresh Dropdown -->
+                    <div class="flex items-center space-x-1 bg-slate-800/80 px-2.5 py-1.5 rounded-lg border border-slate-700 text-slate-300">
+                        <i class="fa-solid fa-clock text-teal-400"></i>
+                        <span class="text-xs hidden sm:inline">รีเฟรช:</span>
+                        <select id="autoRefreshInterval" onchange="handleRefreshRateChange()" class="bg-transparent text-xs text-teal-200 focus:outline-none cursor-pointer">
+                            <option value="0" class="bg-slate-800 text-white">ปิด</option>
+                            <option value="30" class="bg-slate-800 text-white" selected>ทุก 30 วินาที</option>
+                            <option value="60" class="bg-slate-800 text-white">ทุก 1 นาที</option>
+                            <option value="300" class="bg-slate-800 text-white">ทุก 5 นาที</option>
+                        </select>
+                    </div>
+
+                    <!-- Manual Refresh Button -->
+                    <button onclick="fetchCSVData(true)" class="bg-teal-600 hover:bg-teal-500 text-white font-medium px-3 py-1.5 rounded-lg transition duration-150 flex items-center space-x-1.5 shadow-sm active:scale-95">
+                        <i id="refreshIcon" class="fa-solid fa-rotate"></i>
+                        <span>อัพเดต</span>
+                    </button>
+
+                    <!-- Theme Toggle Button (Day / Night Mode) -->
+                    <button onclick="toggleTheme()" id="themeToggleBtn" class="bg-slate-800 hover:bg-slate-700 text-amber-300 px-3 py-1.5 rounded-lg border border-slate-700 transition duration-150 flex items-center space-x-1.5 font-medium shadow-sm active:scale-95" title="สลับโหมดกลางวัน / กลางคืน">
+                        <i id="themeIcon" class="fa-solid fa-moon text-amber-300"></i>
+                        <span id="themeText" class="text-xs text-amber-200 font-medium">โหมดมืด</span>
+                    </button>
+
+                    <!-- Settings Button -->
+                    <button onclick="openSettingsModal()" class="bg-slate-700 hover:bg-slate-600 text-slate-200 px-3 py-1.5 rounded-lg transition duration-150 flex items-center space-x-1" title="ตั้งค่าแหล่งข้อมูล">
+                        <i class="fa-solid fa-gear"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Body Container -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+
+        <!-- KPI Metrics Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+            <!-- Metric 1: Total -->
+            <div class="bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-200/80 dark:border-slate-800 shadow-sm hover:shadow-md transition-all relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-16 h-16 bg-teal-50 dark:bg-teal-950/60 text-teal-500 dark:text-teal-400 rounded-bl-full flex items-pt justify-end p-2 opacity-80">
+                    <i class="fa-solid fa-file-medical text-xl"></i>
+                </div>
+                <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">คำร้องแก้ไขทั้งหมด</p>
+                <div class="mt-2 flex items-baseline justify-between">
+                    <span id="kpiTotal" class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">0</span>
+                    <span class="text-xs text-slate-500 dark:text-slate-400 font-normal">รายการ</span>
+                </div>
+                <div class="mt-2 text-xs text-slate-500 dark:text-slate-400 flex items-center">
+                    <i class="fa-solid fa-list-check mr-1 text-teal-600 dark:text-teal-400"></i> รวมทุกประเภทสถานะ
+                </div>
+            </div>
+
+            <!-- Metric 2: Edited / Completed -->
+            <div class="bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-200/80 dark:border-slate-800 shadow-sm hover:shadow-md transition-all relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-16 h-16 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-500 dark:text-emerald-400 rounded-bl-full flex items-pt justify-end p-2 opacity-80">
+                    <i class="fa-solid fa-circle-check text-xl"></i>
+                </div>
+                <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">แก้ไขแล้ว</p>
+                <div class="mt-2 flex items-baseline justify-between">
+                    <span id="kpiEdited" class="text-2xl sm:text-3xl font-extrabold text-emerald-600 dark:text-emerald-400">0</span>
+                    <span id="kpiEditedPct" class="text-xs font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950/80 px-2 py-0.5 rounded-full border border-emerald-300 dark:border-emerald-800">0%</span>
+                </div>
+                <div class="mt-2 text-xs text-emerald-600 dark:text-emerald-400 flex items-center">
+                    <i class="fa-solid fa-check mr-1"></i> ปรับปรุงข้อมูลเสร็จสิ้น
+                </div>
+            </div>
+
+            <!-- Metric 3: Pending -->
+            <div class="bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-200/80 dark:border-slate-800 shadow-sm hover:shadow-md transition-all relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-16 h-16 bg-amber-50 dark:bg-amber-950/60 text-amber-500 dark:text-amber-400 rounded-bl-full flex items-pt justify-end p-2 opacity-80">
+                    <i class="fa-solid fa-hourglass-start text-xl"></i>
+                </div>
+                <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">รอดำเนินการ</p>
+                <div class="mt-2 flex items-baseline justify-between">
+                    <span id="kpiPending" class="text-2xl sm:text-3xl font-extrabold text-amber-600 dark:text-amber-400">0</span>
+                    <span id="kpiPendingPct" class="text-xs font-bold text-amber-700 dark:text-amber-300 bg-amber-100 dark:bg-amber-950/80 px-2 py-0.5 rounded-full border border-amber-300 dark:border-amber-800">0%</span>
+                </div>
+                <div class="mt-2 text-xs text-amber-600 dark:text-amber-400 flex items-center">
+                    <i class="fa-solid fa-clock mr-1"></i> อยู่ระหว่างรอรับเรื่อง
+                </div>
+            </div>
+
+            <!-- Metric 4: Billed / Submitted -->
+            <div class="bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-200/80 dark:border-slate-800 shadow-sm hover:shadow-md transition-all relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-16 h-16 bg-indigo-50 dark:bg-indigo-950/60 text-indigo-500 dark:text-indigo-400 rounded-bl-full flex items-pt justify-end p-2 opacity-80">
+                    <i class="fa-solid fa-file-invoice-dollar text-xl"></i>
+                </div>
+                <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">ตั้งเบิกแล้ว</p>
+                <div class="mt-2 flex items-baseline justify-between">
+                    <span id="kpiBilled" class="text-2xl sm:text-3xl font-extrabold text-indigo-600 dark:text-indigo-400">0</span>
+                    <span id="kpiBilledPct" class="text-xs font-bold text-indigo-700 dark:text-indigo-300 bg-indigo-100 dark:bg-indigo-950/80 px-2 py-0.5 rounded-full border border-indigo-300 dark:border-indigo-800">0%</span>
+                </div>
+                <div class="mt-2 text-xs text-indigo-600 dark:text-indigo-400 flex items-center">
+                    <i class="fa-solid fa-money-check-dollar mr-1"></i> นำเข้าการตั้งเบิกในระบบ
+                </div>
+            </div>
+
+            <!-- Metric 5: Data Not Found -->
+            <div class="bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-200/80 dark:border-slate-800 shadow-sm hover:shadow-md transition-all relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-16 h-16 bg-rose-50 dark:bg-rose-950/60 text-rose-500 dark:text-rose-400 rounded-bl-full flex items-pt justify-end p-2 opacity-80">
+                    <i class="fa-solid fa-triangle-exclamation text-xl"></i>
+                </div>
+                <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">ไม่พบข้อมูลที่แจ้ง</p>
+                <div class="mt-2 flex items-baseline justify-between">
+                    <span id="kpiNotFound" class="text-2xl sm:text-3xl font-extrabold text-rose-600 dark:text-rose-400">0</span>
+                    <span id="kpiNotFoundPct" class="text-xs font-bold text-rose-700 dark:text-rose-300 bg-rose-100 dark:bg-rose-950/80 px-2 py-0.5 rounded-full border border-rose-300 dark:border-rose-800">0%</span>
+                </div>
+                <div class="mt-2 text-xs text-rose-600 dark:text-rose-400 flex items-center">
+                    <i class="fa-solid fa-magnifying-glass-minus mr-1"></i> ตรวจสอบแล้วไม่พบข้อมูล
+                </div>
+            </div>
+        </div>
+
+        <!-- Search & Filter Controls -->
+        <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm p-4 sm:p-5 transition-colors">
+            <div class="flex flex-col gap-4">
+                <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+                    <h2 class="text-base font-bold text-slate-800 dark:text-slate-100 flex items-center space-x-2">
+                        <i class="fa-solid fa-filter text-teal-600 dark:text-teal-400"></i>
+                        <span>ค้นหาและกรองข้อมูล</span>
+                    </h2>
+                    <button onclick="resetFilters()" class="text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-teal-600 dark:hover:text-teal-300 transition-colors flex items-center space-x-1">
+                        <i class="fa-solid fa-arrow-rotate-left"></i>
+                        <span>ล้างค่าตัวกรอง</span>
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                    <!-- SEARCH BY MINISTRY NUMBER -->
+                    <div class="col-span-1 sm:col-span-1 lg:col-span-1">
+                        <label for="searchMinistry" class="block text-xs font-semibold text-slate-700 dark:text-slate-200 mb-1">
+                            <i class="fa-solid fa-hashtag text-teal-600 dark:text-teal-400 mr-1"></i>ค้นหาเลขกระทรวง
+                        </label>
+                        <div class="relative">
+                            <input type="text" id="searchMinistry" oninput="applyFilters()" placeholder="ระบุเลขกระทรวง..." 
+                                class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 text-sm rounded-xl focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 focus:border-teal-500 p-2.5 pl-9 shadow-sm transition-all">
+                            <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-slate-400 dark:text-slate-500 text-sm"></i>
+                        </div>
+                    </div>
+
+                    <!-- SEARCH GENERAL (HN, Province ID, Reporter Name) -->
+                    <div class="col-span-1 sm:col-span-1 lg:col-span-1">
+                        <label for="searchGeneral" class="block text-xs font-semibold text-slate-700 dark:text-slate-200 mb-1">
+                            <i class="fa-solid fa-search text-slate-500 dark:text-slate-400 mr-1"></i>ค้นหา HN / เลขจังหวัด / ผู้แจ้ง
+                        </label>
+                        <input type="text" id="searchGeneral" oninput="applyFilters()" placeholder="พิมพ์ข้อความค้นหา..." 
+                            class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 text-sm rounded-xl focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 focus:border-teal-500 p-2.5 shadow-sm transition-all">
+                    </div>
+
+                    <!-- FILTER STATUS -->
+                    <div>
+                        <label for="filterStatus" class="block text-xs font-semibold text-slate-700 dark:text-slate-200 mb-1">
+                            <i class="fa-solid fa-list-check text-slate-500 dark:text-slate-400 mr-1"></i>สถานะการแก้ไข
+                        </label>
+                        <select id="filterStatus" onchange="applyFilters()" 
+                            class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-sm rounded-xl focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 focus:border-teal-500 p-2.5 shadow-sm transition-all cursor-pointer">
+                            <option value="ALL">-- สถานะทั้งหมด --</option>
+                            <option value="แก้ไขแล้ว">แก้ไขแล้ว</option>
+                            <option value="รอดำเนินการ">รอดำเนินการ</option>
+                            <option value="ตั้งเบิกแล้ว">ตั้งเบิกแล้ว</option>
+                            <option value="ไม่พบข้อมูลที่แจ้ง">ไม่พบข้อมูลที่แจ้ง</option>
+                        </select>
+                    </div>
+
+                    <!-- FILTER HOSPITAL -->
+                    <div>
+                        <label for="filterHospital" class="block text-xs font-semibold text-slate-700 dark:text-slate-200 mb-1">
+                            <i class="fa-solid fa-hospital text-slate-500 dark:text-slate-400 mr-1"></i>โรงพยาบาล
+                        </label>
+                        <select id="filterHospital" onchange="applyFilters()" 
+                            class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-sm rounded-xl focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 focus:border-teal-500 p-2.5 shadow-sm transition-all cursor-pointer">
+                            <option value="ALL">-- โรงพยาบาลทั้งหมด --</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Active Filter Tags Display -->
+                <div id="activeFilterBadges" class="flex flex-col sm:flex-row sm:items-center gap-2 pt-2 text-xs hidden">
+                    <div class="flex flex-wrap items-center gap-1.5">
+                        <span class="text-slate-500 dark:text-slate-400 font-medium">เงื่อนไขตัวกรอง:</span>
+                        <div id="filterTagContainer" class="flex flex-wrap gap-1.5"></div>
+                    </div>
+                    <span id="searchCriteriaSummary" class="text-slate-400 dark:text-slate-500 italic text-[11px]"></span>
+                </div>
+
+                <!-- Search Results & Status Breakdown Panel -->
+                <div id="instantSearchDetailBox" class="mt-2 bg-gradient-to-r from-slate-900 via-teal-950 to-slate-900 text-white rounded-xl p-4 border border-teal-500/30 shadow-md space-y-3 transition-all">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-teal-800/60 pb-2.5">
+                        <div class="flex items-center space-x-2">
+                            <span class="p-1.5 bg-teal-500/20 text-teal-300 rounded-lg border border-teal-400/30">
+                                <i class="fa-solid fa-magnifying-glass-chart text-sm"></i>
+                            </span>
+                            <div>
+                                <h3 class="text-sm font-bold text-teal-100 flex items-center space-x-2">
+                                    <span>สรุปผลการค้นหาและสถานะการแก้ไข</span>
+                                </h3>
+                                <p class="text-[11px] text-teal-200/70" id="instantSearchSubtitle">ข้อมูลจำแนกตามคำค้นและสถานะปัจจุบัน</p>
+                            </div>
+                        </div>
+                        <span id="instantMatchBadgeCount" class="bg-teal-500/20 text-teal-300 border border-teal-400/40 text-xs px-3 py-1 rounded-full font-bold self-start sm:self-center">
+                            พบ 0 เคส
+                        </span>
+                    </div>
+
+                    <!-- Mini Status Breakdown Grid for Filtered Result -->
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+                        <div class="bg-emerald-950/60 border border-emerald-500/30 rounded-lg p-2.5 flex items-center justify-between">
+                            <div class="flex items-center space-x-2">
+                                <i class="fa-solid fa-circle-check text-emerald-400 text-base"></i>
+                                <div>
+                                    <span class="text-[10px] text-emerald-200/80 block">แก้ไขแล้ว</span>
+                                    <span id="instantCountEdited" class="font-extrabold text-emerald-300 text-sm">0</span>
+                                </div>
+                            </div>
+                            <span id="instantPctEdited" class="text-[10px] bg-emerald-900/80 text-emerald-300 px-1.5 py-0.5 rounded font-mono">0%</span>
+                        </div>
+
+                        <div class="bg-amber-950/60 border border-amber-500/30 rounded-lg p-2.5 flex items-center justify-between">
+                            <div class="flex items-center space-x-2">
+                                <i class="fa-solid fa-hourglass-start text-amber-400 text-base"></i>
+                                <div>
+                                    <span class="text-[10px] text-amber-200/80 block">รอดำเนินการ</span>
+                                    <span id="instantCountPending" class="font-extrabold text-amber-300 text-sm">0</span>
+                                </div>
+                            </div>
+                            <span id="instantPctPending" class="text-[10px] bg-amber-900/80 text-amber-300 px-1.5 py-0.5 rounded font-mono">0%</span>
+                        </div>
+
+                        <div class="bg-indigo-950/60 border border-indigo-500/30 rounded-lg p-2.5 flex items-center justify-between">
+                            <div class="flex items-center space-x-2">
+                                <i class="fa-solid fa-file-invoice-dollar text-indigo-400 text-base"></i>
+                                <div>
+                                    <span class="text-[10px] text-indigo-200/80 block">ตั้งเบิกแล้ว</span>
+                                    <span id="instantCountBilled" class="font-extrabold text-indigo-300 text-sm">0</span>
+                                </div>
+                            </div>
+                            <span id="instantPctBilled" class="text-[10px] bg-indigo-900/80 text-indigo-300 px-1.5 py-0.5 rounded font-mono">0%</span>
+                        </div>
+
+                        <div class="bg-rose-950/60 border border-rose-500/30 rounded-lg p-2.5 flex items-center justify-between">
+                            <div class="flex items-center space-x-2">
+                                <i class="fa-solid fa-triangle-exclamation text-rose-400 text-base"></i>
+                                <div>
+                                    <span class="text-[10px] text-rose-200/80 block">ไม่พบข้อมูล</span>
+                                    <span id="instantCountNotFound" class="font-extrabold text-rose-300 text-sm">0</span>
+                                </div>
+                            </div>
+                            <span id="instantPctNotFound" class="text-[10px] bg-rose-900/80 text-rose-300 px-1.5 py-0.5 rounded font-mono">0%</span>
+                        </div>
+                    </div>
+
+                    <!-- Search Match Preview Cards -->
+                    <div id="instantSearchResultsList" class="hidden">
+                        <!-- Dynamic items -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Grid Section -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Chart 1: Status Distribution (Doughnut) -->
+            <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm p-5 flex flex-col justify-between transition-colors">
+                <div>
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="text-sm font-bold text-slate-800 dark:text-slate-100 flex items-center space-x-2">
+                            <i class="fa-solid fa-chart-pie text-teal-600 dark:text-teal-400"></i>
+                            <span>สัดส่วนสถานะการแก้ไข</span>
+                        </h3>
+                        <span class="text-xs text-slate-400 dark:text-slate-500">ภาพรวม %</span>
+                    </div>
+                    <div class="relative h-64 flex items-center justify-center">
+                        <canvas id="statusChart"></canvas>
+                    </div>
+                </div>
+                <div id="statusChartLegend" class="mt-4 border-t border-slate-100 dark:border-slate-800 pt-3 grid grid-cols-2 gap-2 text-xs">
+                    <!-- Dynamic Legend -->
+                </div>
+            </div>
+
+            <!-- Chart 2: Top Hospitals (Bar Chart) -->
+            <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm p-5 lg:col-span-2 transition-colors">
+                <div class="flex items-center justify-between mb-3">
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-800 dark:text-slate-100 flex items-center space-x-2">
+                            <i class="fa-solid fa-chart-column text-teal-600 dark:text-teal-400"></i>
+                            <span>10 อันดับโรงพยาบาลที่ส่งคำร้องแก้ไขสูงสุด</span>
+                        </h3>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">จำนวนเคสที่มีการแจ้งแก้ไขข้อมูลจากโรงพยาบาล</p>
+                    </div>
+                    <span class="text-xs bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-medium px-2.5 py-1 rounded-lg">Top 10</span>
+                </div>
+                <div class="relative h-64">
+                    <canvas id="hospitalChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chart 3: Requests Trend over Time -->
+        <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm p-5 transition-colors">
+            <div class="flex items-center justify-between mb-3">
+                <div>
+                    <h3 class="text-sm font-bold text-slate-800 dark:text-slate-100 flex items-center space-x-2">
+                        <i class="fa-solid fa-chart-line text-teal-600 dark:text-teal-400"></i>
+                        <span>แนวโน้มการแจ้งแก้ไขข้อมูลตามวัน/เวลาที่เกิดเหตุ</span>
+                    </h3>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">จำแนกปริมาณคำร้องที่ส่งเข้ามาตามช่วงวันที่</p>
+                </div>
+            </div>
+            <div class="relative h-60">
+                <canvas id="trendChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Hospital Analytics Table (% Breakdown) -->
+        <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm overflow-hidden transition-colors">
+            <div class="p-5 border-b border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div>
+                    <h3 class="text-base font-bold text-slate-800 dark:text-slate-100 flex items-center space-x-2">
+                        <i class="fa-solid fa-square-poll-vertical text-teal-600 dark:text-teal-400"></i>
+                        <span>สถิติการแจ้งแก้ไขจำแนกตามโรงพยาบาล และ เปอร์เซ็นต์ (%)</span>
+                    </h3>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">สรุปการคำนวณเคสและสัดส่วนความคืบหน้ารายโรงพยาบาล</p>
+                </div>
+                <div class="relative">
+                    <input type="text" id="searchHospitalTable" oninput="filterHospitalSummaryTable()" placeholder="ค้นหารายชื่อ รพ...." 
+                        class="bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-xs text-slate-800 dark:text-slate-100 rounded-lg p-2 pl-7 focus:ring-1 focus:ring-teal-500 dark:focus:ring-teal-400">
+                    <i class="fa-solid fa-search absolute left-2.5 top-2.5 text-slate-400 dark:text-slate-500 text-xs"></i>
+                </div>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-xs sm:text-sm text-left text-slate-700 dark:text-slate-200">
+                    <thead class="bg-slate-50 dark:bg-slate-800/80 text-slate-700 dark:text-slate-200 uppercase tracking-wider text-xs border-b border-slate-200 dark:border-slate-700">
+                        <tr>
+                            <th scope="col" class="px-4 py-3 font-semibold">ชื่อโรงพยาบาล</th>
+                            <th scope="col" class="px-4 py-3 font-semibold text-center">จำนวนเคสทั้งหมด</th>
+                            <th scope="col" class="px-4 py-3 font-semibold text-center">สัดส่วนในระบบ (%)</th>
+                            <th scope="col" class="px-4 py-3 font-semibold text-center text-emerald-700 dark:text-emerald-400">แก้ไขแล้ว</th>
+                            <th scope="col" class="px-4 py-3 font-semibold text-center text-amber-700 dark:text-amber-400">รอดำเนินการ</th>
+                            <th scope="col" class="px-4 py-3 font-semibold text-center text-indigo-700 dark:text-indigo-400">ตั้งเบิกแล้ว</th>
+                            <th scope="col" class="px-4 py-3 font-semibold text-center text-rose-700 dark:text-rose-400">ไม่พบข้อมูลที่แจ้ง</th>
+                            <th scope="col" class="px-4 py-3 font-semibold text-center">อัตราแก้ไขสำเร็จ (%)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="hospitalSummaryTableBody" class="divide-y divide-slate-100 dark:divide-slate-800">
+                        <!-- Dynamic Content -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Detailed Cases Data Table -->
+        <div id="casesTableContainer" class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm overflow-hidden transition-colors">
+            <div class="p-5 border-b border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div>
+                    <h3 class="text-base font-bold text-slate-800 dark:text-slate-100 flex items-center space-x-2">
+                        <i class="fa-solid fa-table-list text-teal-600 dark:text-teal-400"></i>
+                        <span>รายการรายละเอียดคำร้องแจ้งแก้ไขข้อมูล</span>
+                    </h3>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">แสดงข้อมูลย่อยแบบเรียลไทม์ทั้งหมดในระบบ</p>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <button onclick="exportToCSV()" class="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold px-3 py-2 rounded-xl transition duration-150 flex items-center space-x-1.5 border border-slate-200 dark:border-slate-700">
+                        <i class="fa-solid fa-file-csv text-emerald-600 dark:text-emerald-400"></i>
+                        <span>ส่งออก CSV</span>
+                    </button>
+                    <span id="filteredRecordCount" class="text-xs bg-teal-50 dark:bg-teal-950/80 text-teal-700 dark:text-teal-300 border border-teal-200 dark:border-teal-800 font-semibold px-3 py-1.5 rounded-xl">
+                        พบ 0 รายการ
+                    </span>
+                </div>
+            </div>
+
+            <!-- Table Container -->
+            <div class="overflow-x-auto">
+                <table class="w-full text-xs sm:text-sm text-left text-slate-700 dark:text-slate-200">
+                    <thead class="bg-slate-50 dark:bg-slate-800/80 text-slate-700 dark:text-slate-200 uppercase tracking-wider text-xs border-b border-slate-200 dark:border-slate-700">
+                        <tr>
+                            <th scope="col" class="px-4 py-3 font-semibold cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700 transition" onclick="sortTable('timestamp')">
+                                วันที่/เวลา เกิดเหตุ <i class="fa-solid fa-sort text-slate-400 dark:text-slate-500 ml-1"></i>
+                            </th>
+                            <th scope="col" class="px-4 py-3 font-semibold">เลขจังหวัด</th>
+                            <th scope="col" class="px-4 py-3 font-semibold bg-teal-50/50 dark:bg-teal-950/40 text-teal-900 dark:text-teal-300 border-x border-teal-100 dark:border-teal-900/60">
+                                <i class="fa-solid fa-hashtag text-teal-600 dark:text-teal-400 mr-1"></i>เลขกระทรวง
+                            </th>
+                            <th scope="col" class="px-4 py-3 font-semibold">HN</th>
+                            <th scope="col" class="px-4 py-3 font-semibold">แก้ไขข้อมูลจาก รพ. อะไร</th>
+                            <th scope="col" class="px-4 py-3 font-semibold">ชื่อ-ตำแหน่ง ผู้แจ้ง</th>
+                            <th scope="col" class="px-4 py-3 font-semibold text-center">สถานะการแก้ไข</th>
+                            <th scope="col" class="px-4 py-3 font-semibold">หมายเหตุ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="casesTableBody" class="divide-y divide-slate-100 dark:divide-slate-800">
+                        <!-- Dynamic Rows -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Table Pagination & Footer -->
+            <div class="px-5 py-3 bg-slate-50 dark:bg-slate-800/80 border-t border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-600 dark:text-slate-300">
+                <div class="flex items-center space-x-2">
+                    <span>แสดง</span>
+                    <select id="rowsPerPage" onchange="changePageSize()" class="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 text-slate-800 dark:text-slate-200 rounded p-1 text-xs">
+                        <option value="10">10</option>
+                        <option value="25" selected>25</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                    </select>
+                    <span>แถวต่อหน้า</span>
+                </div>
+
+                <div id="paginationInfo" class="font-medium text-slate-700 dark:text-slate-300">
+                    แสดง 0 ถึง 0 จาก 0 รายการ
+                </div>
+
+                <div class="flex items-center space-x-1">
+                    <button id="prevPageBtn" onclick="prevPage()" class="px-3 py-1 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-200 rounded hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed">
+                        <i class="fa-solid fa-chevron-left"></i> ย้อนกลับ
+                    </button>
+                    <span id="currentPageNum" class="px-3 py-1 font-semibold text-teal-700 dark:text-teal-300 bg-teal-50 dark:bg-teal-950/80 rounded border border-teal-200 dark:border-teal-800">1</span>
+                    <button id="nextPageBtn" onclick="nextPage()" class="px-3 py-1 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-200 rounded hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed">
+                        ถัดไป <i class="fa-solid fa-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+        <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+                <h3 class="text-base font-bold text-slate-800 dark:text-slate-100 flex items-center space-x-2">
+                    <i class="fa-solid fa-sliders text-teal-600 dark:text-teal-400"></i>
+                    <span>ตั้งค่าแหล่งข้อมูล (Data Source)</span>
+                </h3>
+                <button onclick="closeSettingsModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <div class="space-y-3">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-200 mb-1">Google Sheets CSV URL:</label>
+                    <textarea id="customCsvUrl" rows="3" class="w-full text-xs bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-100 rounded-xl p-2.5 font-mono focus:ring-2 focus:ring-teal-500"></textarea>
+                    <p class="text-[10px] text-slate-500 dark:text-slate-400 mt-1">* ลิงก์ตรงของ Google Sheets เผยแพร่แบบ CSV</p>
+                </div>
+
+                <div class="relative flex py-1 items-center">
+                    <div class="flex-grow border-t border-slate-200 dark:border-slate-700"></div>
+                    <span class="flex-shrink mx-2 text-slate-400 dark:text-slate-500 text-xs uppercase">หรือ Upload ไฟล์ CSV</span>
+                    <div class="flex-grow border-t border-slate-200 dark:border-slate-700"></div>
+                </div>
+
+                <div>
+                    <input type="file" id="localFileInput" accept=".csv" class="hidden" onchange="handleFileUpload(event)">
+                    <button onclick="document.getElementById('localFileInput').click()" class="w-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold py-2.5 rounded-xl border border-dashed border-slate-300 dark:border-slate-600 transition">
+                        <i class="fa-solid fa-file-upload mr-1 text-teal-600 dark:text-teal-400"></i> เลือกไฟล์ CSV จากเครื่อง
+                    </button>
+                </div>
+            </div>
+
+            <div class="flex justify-end space-x-2 pt-3 border-t border-slate-100 dark:border-slate-800">
+                <button onclick="closeSettingsModal()" class="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-semibold hover:bg-slate-200 dark:hover:bg-slate-700">ยกเลิก</button>
+                <button onclick="saveCustomSettings()" class="px-4 py-2 bg-teal-600 hover:bg-teal-500 text-white rounded-xl text-xs font-semibold shadow">บันทึก & รีโหลด</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Note Details -->
+    <div id="noteModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+        <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+                <h3 class="text-base font-bold text-slate-800 dark:text-slate-100 flex items-center space-x-2">
+                    <i class="fa-solid fa-comment-dots text-teal-600 dark:text-teal-400"></i>
+                    <span>รายละเอียดหมายเหตุ</span>
+                </h3>
+                <button onclick="closeNoteModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <div id="noteModalContent" class="text-sm text-slate-700 dark:text-slate-200 bg-slate-50 dark:bg-slate-800/90 p-4 rounded-xl border border-slate-200 dark:border-slate-700 whitespace-pre-wrap leading-relaxed max-h-60 overflow-y-auto">
+                -
+            </div>
+
+            <div class="flex justify-end pt-2">
+                <button onclick="closeNoteModal()" class="px-4 py-2 bg-slate-800 dark:bg-slate-700 text-white rounded-xl text-xs font-semibold hover:bg-slate-700 dark:hover:bg-slate-600">ปิด</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Core Application JavaScript Engine -->
+    <script>
+        // Target Google Sheets CSV link requested by user
+        const DEFAULT_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSzBFUfr0CkejIVMYj7l8BbQxk99vwLjDQHLFlWzz1AnrVNuLB1vo_-u7Bf4xwNsftneGDH_UpQNyWF/pub?gid=1899922056&single=true&output=csv";
+
+        let currentCsvUrl = DEFAULT_CSV_URL;
+        let parsedRecords = [];
+        let filteredRecords = [];
+        let hospitalSummary = [];
+        
+        let autoRefreshTimer = null;
+        let currentPage = 1;
+        let pageSize = 25;
+        let sortDirection = 'desc';
+        let isDarkMode = false;
+
+        // Chart instances
+        let statusChartObj = null;
+        let hospitalChartObj = null;
+        let trendChartObj = null;
+
+        // Initialize Application
+        window.onload = function () {
+            initTheme();
+            document.getElementById('customCsvUrl').value = DEFAULT_CSV_URL;
+            fetchCSVData(true);
+            setupAutoRefresh(30);
+        };
+
+        // Day/Night Theme Management
+        function initTheme() {
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                isDarkMode = true;
+            } else {
+                isDarkMode = false;
+            }
+            applyTheme();
+        }
+
+        function toggleTheme() {
+            isDarkMode = !isDarkMode;
+            localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
+            applyTheme();
+            // Re-render charts with contrast-adjusted colors for active theme
+            const total = filteredRecords.length;
+            let edited = 0, pending = 0, billed = 0, notFound = 0, other = 0;
+            filteredRecords.forEach(rec => {
+                if (rec.status === 'แก้ไขแล้ว') edited++;
+                else if (rec.status === 'รอดำเนินการ') pending++;
+                else if (rec.status === 'ตั้งเบิกแล้ว') billed++;
+                else if (rec.status === 'ไม่พบข้อมูลที่แจ้ง') notFound++;
+                else other++;
+            });
+            renderCharts(edited, pending, billed, notFound, other);
+        }
+
+        function applyTheme() {
+            const htmlRoot = document.getElementById('htmlRoot');
+            const themeIcon = document.getElementById('themeIcon');
+            const themeText = document.getElementById('themeText');
+            const themeToggleBtn = document.getElementById('themeToggleBtn');
+
+            if (isDarkMode) {
+                htmlRoot.classList.add('dark');
+                themeIcon.className = "fa-solid fa-sun text-amber-300";
+                themeText.innerText = "โหมดสว่าง";
+                themeText.className = "text-xs text-amber-200 font-medium";
+                themeToggleBtn.className = "bg-amber-950/80 hover:bg-amber-900/80 text-amber-300 px-3 py-1.5 rounded-lg border border-amber-600/50 transition duration-150 flex items-center space-x-1.5 font-medium shadow-sm active:scale-95";
+            } else {
+                htmlRoot.classList.remove('dark');
+                themeIcon.className = "fa-solid fa-moon text-amber-300";
+                themeText.innerText = "โหมดมืด";
+                themeText.className = "text-xs text-amber-200 font-medium";
+                themeToggleBtn.className = "bg-slate-800 hover:bg-slate-700 text-amber-300 px-3 py-1.5 rounded-lg border border-slate-700 transition duration-150 flex items-center space-x-1.5 font-medium shadow-sm active:scale-95";
+            }
+        }
+
+        function fetchCSVData(showLoadingIndicator = false) {
+            const refreshIcon = document.getElementById('refreshIcon');
+            if (refreshIcon) refreshIcon.classList.add('fa-spin');
+            
+            if (showLoadingIndicator) {
+                updateConnectionStatus(false, "กำลังดึงข้อมูลจากระบบ...");
+            }
+
+            // Attempt parsing with direct URL first, fallback to CORS proxy if blocked
+            parseWithUrl(currentCsvUrl, false);
+        }
+
+        function parseWithUrl(targetUrl, isProxy = false) {
+            Papa.parse(targetUrl, {
+                download: true,
+                header: true,
+                skipEmptyLines: true,
+                complete: function (results) {
+                    const refreshIcon = document.getElementById('refreshIcon');
+                    if (refreshIcon) refreshIcon.classList.remove('fa-spin');
+
+                    if (results.data && results.data.length > 0 && isValidData(results.data)) {
+                        processData(results.data);
+                        updateConnectionStatus(true, `เชื่อมต่อปกติ (${results.data.length} เคส)`);
+                        const lastRefEl = document.getElementById('lastRefreshedTimeText');
+                        if (lastRefEl) lastRefEl.innerText = `(อัพเดตเมื่อ ${new Date().toLocaleTimeString('th-TH')} น.)`;
+                    } else if (!isProxy) {
+                        // Retry using CORS proxy
+                        console.warn("Direct CSV load empty or blocked. Retrying via CORS Proxy...");
+                        const proxyUrl = "https://api.allorigins.win/raw?url=" + encodeURIComponent(currentCsvUrl);
+                        parseWithUrl(proxyUrl, true);
+                    } else {
+                        updateConnectionStatus(false, "ไม่สามารถดึง CSV ได้ (แสดงข้อมูลตัวอย่างบุรีรัมย์)");
+                        useMockFallbackData();
+                    }
+                },
+                error: function (err) {
+                    if (!isProxy) {
+                        console.warn("Direct CSV load error. Retrying via CORS Proxy...", err);
+                        const proxyUrl = "https://api.allorigins.win/raw?url=" + encodeURIComponent(currentCsvUrl);
+                        parseWithUrl(proxyUrl, true);
+                    } else {
+                        const refreshIcon = document.getElementById('refreshIcon');
+                        if (refreshIcon) refreshIcon.classList.remove('fa-spin');
+                        console.error("CSV Fetch Error:", err);
+                        updateConnectionStatus(false, "ไม่สามารถดึง CSV ได้ (แสดงข้อมูลตัวอย่างบุรีรัมย์)");
+                        useMockFallbackData();
+                    }
+                }
+            });
+        }
+
+        function isValidData(dataArray) {
+            // Check if returned data contains valid object keys
+            if (!dataArray || dataArray.length === 0) return false;
+            const firstRow = dataArray[0];
+            return Object.keys(firstRow).length > 1;
+        }
+
+        // Robust Column Search & Extraction Helper
+        function cleanStr(str) {
+            if (!str) return '';
+            return str.toString().replace(/^\uFEFF/, '').trim();
+        }
+
+        function getVal(row, keys) {
+            const rowKeys = Object.keys(row);
+            for (let key of keys) {
+                const keyLower = key.toLowerCase();
+                for (let rk of rowKeys) {
+                    const cleanRk = cleanStr(rk).toLowerCase();
+                    if (cleanRk.includes(keyLower)) {
+                        const val = cleanStr(row[rk]);
+                        if (val && val !== 'undefined' && val !== 'null') {
+                            return val;
+                        }
+                    }
+                }
+            }
+            return '';
+        }
+
+        function processData(rawData) {
+            parsedRecords = rawData.map((row, idx) => {
+                const timestamp = getVal(row, ['ประทับเวลา', 'timestamp', 'วันที่', 'เวลา', 'date']);
+                const provId = getVal(row, ['เลขจังหวัด', 'จังหวัด', 'province', 'prov']);
+                const minId = getVal(row, ['เลขกระทรวง', 'ปฏิบัติการ', 'ministry', 'ems']);
+                const hn = getVal(row, ['hn', 'เวชระเบียน', 'เลข hn']);
+                
+                // Multi-keyword strategy to find hospital column cleanly
+                let hospital = getVal(row, [
+                    'แก้ไขข้อมูลจาก รพ', 
+                    'แก้ไขข้อมูลจากรพ', 
+                    'โรงพยาบาล', 
+                    'รพ', 
+                    'หน่วยบริการ', 
+                    'สถานพยาบาล', 
+                    'ชื่อ รพ', 
+                    'ชื่อโรงพยาบาล', 
+                    'hospital'
+                ]);
+
+                // Fallback scan: Search cell values for hospital keywords if header matching missed
+                if (!hospital) {
+                    for (let val of Object.values(row)) {
+                        const cleanV = cleanStr(val);
+                        if (cleanV.includes('รพ.') || cleanV.includes('โรงพยาบาล') || cleanV.includes('ศูนย์แพทย์')) {
+                            hospital = cleanV;
+                            break;
+                        }
+                    }
+                }
+
+                if (!hospital) hospital = 'ไม่ระบุ รพ.';
+
+                const reporter = getVal(row, ['ผู้แจ้ง', 'ชื่อ-ตำแหน่ง', 'ชื่อ', 'ตำแหน่ง', 'reporter']);
+                const rawStatus = getVal(row, ['สถานะ', 'status', 'ผลการ']);
+                const note = getVal(row, ['หมายเหตุ', 'note', 'remark', 'เหตุผล']);
+
+                const status = normalizeStatus(rawStatus);
+
+                return {
+                    id: idx + 1,
+                    timestamp: timestamp || '-',
+                    provId: provId || '3100', // Default to Buriram province code if missing
+                    minId: minId || '-',
+                    hn: hn || '-',
+                    hospital: hospital,
+                    reporter: reporter || '-',
+                    status: status,
+                    note: note || '-'
+                };
+            });
+
+            populateHospitalDropdown();
+            applyFilters();
+        }
+
+        // Normalize status into exactly 4 standard categories requested
+        function normalizeStatus(statusRaw) {
+            if (!statusRaw) return 'รอดำเนินการ';
+            const s = cleanStr(statusRaw);
+            const lower = s.toLowerCase();
+
+            if (lower.includes('แก้ไขแล้ว') || lower.includes('เรียบร้อย') || lower.includes('อนุมัติ') || lower.includes('complete') || lower.includes('done')) {
+                return 'แก้ไขแล้ว';
+            }
+            if (lower.includes('ตั้งเบิกแล้ว') || lower.includes('ตั้งเบิก') || lower.includes('เบิกแล้ว') || lower.includes('billed')) {
+                return 'ตั้งเบิกแล้ว';
+            }
+            if (lower.includes('ไม่พบข้อมูลที่แจ้ง') || lower.includes('ไม่พบข้อมูล') || lower.includes('ไม่พบ') || lower.includes('not found') || lower.includes('reject')) {
+                return 'ไม่พบข้อมูลที่แจ้ง';
+            }
+            if (lower.includes('รอดำเนินการ') || lower.includes('รอ') || lower.includes('pending')) {
+                return 'รอดำเนินการ';
+            }
+            return s || 'รอดำเนินการ';
+        }
+
+        function populateHospitalDropdown() {
+            const select = document.getElementById('filterHospital');
+            const currentVal = select.value;
+            
+            const hospitals = [...new Set(parsedRecords.map(r => r.hospital))].filter(Boolean).sort();
+            
+            select.innerHTML = '<option value="ALL">-- โรงพยาบาลทั้งหมด --</option>';
+            hospitals.forEach(h => {
+                const opt = document.createElement('option');
+                opt.value = h;
+                opt.textContent = h;
+                select.appendChild(opt);
+            });
+
+            if (hospitals.includes(currentVal)) {
+                select.value = currentVal;
+            }
+        }
+
+        function applyFilters() {
+            const minSearch = document.getElementById('searchMinistry').value.trim().toLowerCase();
+            const genSearch = document.getElementById('searchGeneral').value.trim().toLowerCase();
+            const statusFilter = document.getElementById('filterStatus').value;
+            const hospitalFilter = document.getElementById('filterHospital').value;
+
+            filteredRecords = parsedRecords.filter(r => {
+                // Filter 1: Search Ministry Number
+                if (minSearch && !r.minId.toLowerCase().includes(minSearch)) {
+                    return false;
+                }
+                // Filter 2: Search General (HN, Prov ID, Reporter, Hospital, Note)
+                if (genSearch) {
+                    const matchesGen = r.hn.toLowerCase().includes(genSearch) ||
+                                       r.provId.toLowerCase().includes(genSearch) ||
+                                       r.reporter.toLowerCase().includes(genSearch) ||
+                                       r.hospital.toLowerCase().includes(genSearch) ||
+                                       r.note.toLowerCase().includes(genSearch);
+                    if (!matchesGen) return false;
+                }
+                // Filter 3: Status
+                if (statusFilter !== 'ALL' && r.status !== statusFilter) {
+                    return false;
+                }
+                // Filter 4: Hospital
+                if (hospitalFilter !== 'ALL' && r.hospital !== hospitalFilter) {
+                    return false;
+                }
+                return true;
+            });
+
+            currentPage = 1;
+            updateActiveFilterBadges(minSearch, genSearch, statusFilter, hospitalFilter);
+            calculateMetricsAndAggregations();
+            renderInstantSearchMatches();
+            renderCasesTable();
+        }
+
+        function renderInstantSearchMatches() {
+            const detailBox = document.getElementById('instantSearchDetailBox');
+            const listContainer = document.getElementById('instantSearchResultsList');
+            const badgeCount = document.getElementById('instantMatchBadgeCount');
+            const subtitle = document.getElementById('instantSearchSubtitle');
+
+            if (!detailBox || !listContainer) return;
+
+            const minSearch = (document.getElementById('searchMinistry')?.value || '').trim();
+            const genSearch = (document.getElementById('searchGeneral')?.value || '').trim();
+            const statusFilter = document.getElementById('filterStatus')?.value || 'ALL';
+            const hospitalFilter = document.getElementById('filterHospital')?.value || 'ALL';
+
+            const isFiltered = minSearch !== '' || genSearch !== '' || statusFilter !== 'ALL' || hospitalFilter !== 'ALL';
+
+            if (subtitle) {
+                if (isFiltered) {
+                    subtitle.innerText = `ผลการค้นหาตามเงื่อนไข (${filteredRecords.length.toLocaleString()} เคส)`;
+                } else {
+                    subtitle.innerText = `สรุปสถานะการแก้ไขของข้อมูลทั้งหมดในระบบ`;
+                }
+            }
+
+            if (badgeCount) badgeCount.innerText = `พบ ${filteredRecords.length.toLocaleString()} เคส`;
+            listContainer.innerHTML = '';
+
+            if (!isFiltered) {
+                listContainer.className = "hidden";
+                return;
+            }
+
+            listContainer.className = "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 pt-1";
+
+            if (filteredRecords.length === 0) {
+                listContainer.innerHTML = `
+                    <div class="col-span-full bg-slate-900/90 rounded-xl p-4 text-center text-slate-300 text-xs border border-rose-800/60">
+                        <i class="fa-solid fa-magnifying-glass-minus text-rose-400 text-2xl mb-1 block"></i>
+                        ไม่พบข้อมูลที่ตรงตามเงื่อนไขการค้นหา
+                    </div>
+                `;
+                return;
+            }
+
+            // Display top matched preview cards directly in search view
+            const displayList = filteredRecords.slice(0, 6);
+            displayList.forEach(r => {
+                const card = document.createElement('div');
+                card.className = "bg-slate-900/90 border border-teal-700/60 hover:border-teal-400 transition-all rounded-xl p-3 text-xs space-y-2 shadow-sm";
+                card.innerHTML = `
+                    <div class="flex items-center justify-between border-b border-teal-800/60 pb-1.5">
+                        <div class="flex items-center space-x-1.5 truncate pr-1">
+                            <span class="bg-teal-500/20 text-teal-300 font-bold px-2 py-0.5 rounded border border-teal-400/30 text-xs shrink-0">
+                                <i class="fa-solid fa-hashtag text-teal-400 mr-1"></i>${escapeHtml(r.minId)}
+                            </span>
+                            <span class="text-slate-300 font-semibold truncate">HN: ${escapeHtml(r.hn)}</span>
+                        </div>
+                        <div class="shrink-0">${getStatusBadgeHTML(r.status)}</div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-1 text-[11px] text-slate-300">
+                        <div class="truncate text-teal-300 font-medium" title="${escapeHtml(r.hospital)}"><i class="fa-solid fa-hospital text-teal-400 mr-1"></i>${escapeHtml(r.hospital)}</div>
+                        <div><i class="fa-solid fa-location-dot text-slate-400 mr-1"></i>เลขจังหวัด: ${escapeHtml(r.provId)}</div>
+                        <div class="col-span-2 truncate" title="${escapeHtml(r.reporter)}"><i class="fa-solid fa-user-pen text-slate-400 mr-1"></i>${escapeHtml(r.reporter)}</div>
+                        <div class="col-span-2 text-[10px] text-teal-200/70"><i class="fa-solid fa-clock mr-1"></i>${escapeHtml(r.timestamp)}</div>
+                    </div>
+                    ${r.note && r.note !== '-' ? `
+                        <div class="bg-slate-950/70 p-1.5 rounded-lg text-[11px] text-amber-200/90 border border-amber-500/20 truncate" title="${escapeHtml(r.note)}">
+                            <i class="fa-solid fa-comment-dots mr-1 text-amber-400"></i>${escapeHtml(r.note)}
+                        </div>
+                    ` : ''}
+                `;
+                listContainer.appendChild(card);
+            });
+
+            if (filteredRecords.length > 6) {
+                const moreNotice = document.createElement('div');
+                moreNotice.className = "col-span-full text-center text-teal-300 text-xs pt-1";
+                moreNotice.innerHTML = `แสดง 6 รายการแรกจากทั้งหมด ${filteredRecords.length.toLocaleString()} รายการ <button onclick="scrollToCasesTable()" class="underline text-amber-300 font-semibold hover:text-white ml-1"><i class="fa-solid fa-arrow-down mr-1"></i>ดูทั้งหมดในตารางรายละเอียด</button>`;
+                listContainer.appendChild(moreNotice);
+            }
+        }
+
+        function resetFilters() {
+            document.getElementById('searchMinistry').value = '';
+            document.getElementById('searchGeneral').value = '';
+            document.getElementById('filterStatus').value = 'ALL';
+            document.getElementById('filterHospital').value = 'ALL';
+            applyFilters();
+        }
+
+        function calculateMetricsAndAggregations() {
+            const total = filteredRecords.length;
+            
+            let edited = 0;       // แก้ไขแล้ว
+            let pending = 0;      // รอดำเนินการ
+            let billed = 0;       // ตั้งเบิกแล้ว
+            let notFound = 0;     // ไม่พบข้อมูลที่แจ้ง
+            let other = 0;
+
+            const hospitalMap = {};
+
+            filteredRecords.forEach(rec => {
+                // Count Statuses
+                if (rec.status === 'แก้ไขแล้ว') edited++;
+                else if (rec.status === 'รอดำเนินการ') pending++;
+                else if (rec.status === 'ตั้งเบิกแล้ว') billed++;
+                else if (rec.status === 'ไม่พบข้อมูลที่แจ้ง') notFound++;
+                else other++;
+
+                // Aggregate by Hospital
+                if (!hospitalMap[rec.hospital]) {
+                    hospitalMap[rec.hospital] = {
+                        name: rec.hospital,
+                        total: 0,
+                        edited: 0,
+                        pending: 0,
+                        billed: 0,
+                        notFound: 0
+                    };
+                }
+                hospitalMap[rec.hospital].total++;
+                if (rec.status === 'แก้ไขแล้ว') hospitalMap[rec.hospital].edited++;
+                else if (rec.status === 'รอดำเนินการ') hospitalMap[rec.hospital].pending++;
+                else if (rec.status === 'ตั้งเบิกแล้ว') hospitalMap[rec.hospital].billed++;
+                else if (rec.status === 'ไม่พบข้อมูลที่แจ้ง') hospitalMap[rec.hospital].notFound++;
+            });
+
+            // Safe DOM Setter helper
+            const setElemText = (id, text) => {
+                const el = document.getElementById(id);
+                if (el) el.innerText = text;
+            };
+
+            // Update KPI Card UI
+            setElemText('kpiTotal', total.toLocaleString());
+            
+            setElemText('kpiEdited', edited.toLocaleString());
+            setElemText('kpiEditedPct', total > 0 ? ((edited / total) * 100).toFixed(1) + '%' : '0%');
+
+            setElemText('kpiPending', pending.toLocaleString());
+            setElemText('kpiPendingPct', total > 0 ? ((pending / total) * 100).toFixed(1) + '%' : '0%');
+
+            setElemText('kpiBilled', billed.toLocaleString());
+            setElemText('kpiBilledPct', total > 0 ? ((billed / total) * 100).toFixed(1) + '%' : '0%');
+
+            setElemText('kpiNotFound', notFound.toLocaleString());
+            setElemText('kpiNotFoundPct', total > 0 ? ((notFound / total) * 100).toFixed(1) + '%' : '0%');
+
+            // Update Instant Live Search Results Banner Counters & Percentages
+            setElemText('instantMatchBadgeCount', `พบ ${total.toLocaleString()} เคส`);
+            setElemText('instantCountEdited', edited.toLocaleString());
+            setElemText('instantPctEdited', total > 0 ? ((edited / total) * 100).toFixed(1) + '%' : '0%');
+
+            setElemText('instantCountPending', pending.toLocaleString());
+            setElemText('instantPctPending', total > 0 ? ((pending / total) * 100).toFixed(1) + '%' : '0%');
+
+            setElemText('instantCountBilled', billed.toLocaleString());
+            setElemText('instantPctBilled', total > 0 ? ((billed / total) * 100).toFixed(1) + '%' : '0%');
+
+            setElemText('instantCountNotFound', notFound.toLocaleString());
+            setElemText('instantPctNotFound', total > 0 ? ((notFound / total) * 100).toFixed(1) + '%' : '0%');
+
+            // Transform Hospital Map into Sorted Array with Percentage Calculations
+            hospitalSummary = Object.values(hospitalMap).map(h => {
+                const pctOfTotal = total > 0 ? ((h.total / total) * 100).toFixed(1) : 0;
+                const successRate = h.total > 0 ? ((h.edited / h.total) * 100).toFixed(1) : 0;
+                return {
+                    ...h,
+                    pctOfTotal: parseFloat(pctOfTotal),
+                    successRate: parseFloat(successRate)
+                };
+            }).sort((a, b) => b.total - a.total);
+
+            // Render Breakdown Table
+            renderHospitalSummaryTable(hospitalSummary);
+
+            // Update Charts
+            renderCharts(edited, pending, billed, notFound, other);
+        }
+
+        function renderCharts(edited, pending, billed, notFound, other) {
+            const chartTextColor = isDarkMode ? '#cbd5e1' : '#475569';
+            const chartGridColor = isDarkMode ? '#334155' : '#f1f5f9';
+
+            // 1. Status Chart (Doughnut)
+            const ctxStatus = document.getElementById('statusChart').getContext('2d');
+            if (statusChartObj) statusChartObj.destroy();
+
+            statusChartObj = new Chart(ctxStatus, {
+                type: 'doughnut',
+                data: {
+                    labels: ['แก้ไขแล้ว', 'รอดำเนินการ', 'ตั้งเบิกแล้ว', 'ไม่พบข้อมูลที่แจ้ง'],
+                    datasets: [{
+                        data: [edited, pending, billed, notFound],
+                        backgroundColor: ['#10b981', '#f59e0b', '#6366f1', '#f43f5e'],
+                        borderWidth: 2,
+                        borderColor: isDarkMode ? '#0f172a' : '#ffffff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const val = context.raw;
+                                    const pct = total > 0 ? ((val / total) * 100).toFixed(1) : 0;
+                                    return ` ${context.label}: ${val} เคส (${pct}%)`;
+                                }
+                            }
+                        }
+                    },
+                    cutout: '68%'
+                }
+            });
+
+            // Status Legend Build with high contrast mode text
+            const legendBox = document.getElementById('statusChartLegend');
+            const totalStatus = edited + pending + billed + notFound;
+            legendBox.innerHTML = `
+                <div class="flex items-center space-x-1.5"><span class="w-3 h-3 rounded-full bg-emerald-500"></span><span class="text-slate-600 dark:text-slate-300">แก้ไขแล้ว (${totalStatus > 0 ? ((edited/totalStatus)*100).toFixed(1) : 0}%)</span></div>
+                <div class="flex items-center space-x-1.5"><span class="w-3 h-3 rounded-full bg-amber-500"></span><span class="text-slate-600 dark:text-slate-300">รอดำเนินการ (${totalStatus > 0 ? ((pending/totalStatus)*100).toFixed(1) : 0}%)</span></div>
+                <div class="flex items-center space-x-1.5"><span class="w-3 h-3 rounded-full bg-indigo-500"></span><span class="text-slate-600 dark:text-slate-300">ตั้งเบิกแล้ว (${totalStatus > 0 ? ((billed/totalStatus)*100).toFixed(1) : 0}%)</span></div>
+                <div class="flex items-center space-x-1.5"><span class="w-3 h-3 rounded-full bg-rose-500"></span><span class="text-slate-600 dark:text-slate-300">ไม่พบข้อมูล (${totalStatus > 0 ? ((notFound/totalStatus)*100).toFixed(1) : 0}%)</span></div>
+            `;
+
+            // 2. Top Hospitals Chart (Bar)
+            const top10 = hospitalSummary.slice(0, 10);
+            const ctxHospital = document.getElementById('hospitalChart').getContext('2d');
+            if (hospitalChartObj) hospitalChartObj.destroy();
+
+            hospitalChartObj = new Chart(ctxHospital, {
+                type: 'bar',
+                data: {
+                    labels: top10.map(h => h.name.length > 18 ? h.name.substring(0, 18) + '...' : h.name),
+                    datasets: [{
+                        label: 'จำนวนเคสแจ้งแก้ไข',
+                        data: top10.map(h => h.total),
+                        backgroundColor: isDarkMode ? '#14b8a6' : '#0d9488',
+                        borderRadius: 8,
+                        hoverBackgroundColor: isDarkMode ? '#2dd4bf' : '#0f766e'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        x: { 
+                            grid: { display: false }, 
+                            ticks: { font: { family: 'Prompt', size: 10 }, color: chartTextColor } 
+                        },
+                        y: { 
+                            beginAtZero: true, 
+                            grid: { color: chartGridColor },
+                            ticks: { color: chartTextColor }
+                        }
+                    }
+                }
+            });
+
+            // 3. Trend Chart (Line)
+            renderTrendChart();
+        }
+
+        function renderTrendChart() {
+            const chartTextColor = isDarkMode ? '#cbd5e1' : '#475569';
+            const chartGridColor = isDarkMode ? '#334155' : '#f1f5f9';
+
+            const dateMap = {};
+            filteredRecords.forEach(r => {
+                let dStr = 'ไม่ระบุวัน';
+                if (r.timestamp && r.timestamp !== '-') {
+                    dStr = r.timestamp.split(' ')[0]; // Extract DD/MM/YYYY
+                }
+                dateMap[dStr] = (dateMap[dStr] || 0) + 1;
+            });
+
+            const labels = Object.keys(dateMap).slice(-15);
+            const counts = labels.map(l => dateMap[l]);
+
+            const ctxTrend = document.getElementById('trendChart').getContext('2d');
+            if (trendChartObj) trendChartObj.destroy();
+
+            trendChartObj = new Chart(ctxTrend, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'จำนวนคำร้อง',
+                        data: counts,
+                        borderColor: isDarkMode ? '#2dd4bf' : '#0d9488',
+                        backgroundColor: isDarkMode ? 'rgba(45, 212, 191, 0.15)' : 'rgba(13, 148, 136, 0.1)',
+                        fill: true,
+                        tension: 0.3,
+                        pointRadius: 4,
+                        pointBackgroundColor: isDarkMode ? '#14b8a6' : '#0f766e'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { 
+                            grid: { display: false }, 
+                            ticks: { font: { family: 'Prompt', size: 10 }, color: chartTextColor } 
+                        },
+                        y: { 
+                            beginAtZero: true, 
+                            grid: { color: chartGridColor },
+                            ticks: { color: chartTextColor }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderHospitalSummaryTable(hospitals) {
+            const tbody = document.getElementById('hospitalSummaryTableBody');
+            tbody.innerHTML = '';
+
+            if (hospitals.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="8" class="text-center py-6 text-slate-400 dark:text-slate-500">ไม่พบข้อมูลโรงพยาบาล</td></tr>`;
+                return;
+            }
+
+            hospitals.forEach(h => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors";
+                tr.innerHTML = `
+                    <td class="px-4 py-3 font-semibold text-slate-800 dark:text-slate-100 flex items-center space-x-2">
+                        <i class="fa-solid fa-hospital text-teal-600 dark:text-teal-400 text-xs"></i>
+                        <span>${escapeHtml(h.name)}</span>
+                    </td>
+                    <td class="px-4 py-3 text-center font-bold text-slate-900 dark:text-white">${h.total.toLocaleString()}</td>
+                    <td class="px-4 py-3 text-center">
+                        <div class="flex items-center justify-center space-x-1">
+                            <span class="font-bold text-slate-700 dark:text-slate-300">${h.pctOfTotal}%</span>
+                            <div class="w-12 bg-slate-200 dark:bg-slate-700 rounded-full h-1.5 hidden sm:block">
+                                <div class="bg-teal-600 dark:bg-teal-400 h-1.5 rounded-full" style="width: ${Math.min(h.pctOfTotal * 2, 100)}%"></div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-4 py-3 text-center font-semibold text-emerald-600 dark:text-emerald-400">${h.edited}</td>
+                    <td class="px-4 py-3 text-center font-semibold text-amber-600 dark:text-amber-400">${h.pending}</td>
+                    <td class="px-4 py-3 text-center font-semibold text-indigo-600 dark:text-indigo-400">${h.billed}</td>
+                    <td class="px-4 py-3 text-center font-semibold text-rose-600 dark:text-rose-400">${h.notFound}</td>
+                    <td class="px-4 py-3 text-center">
+                        <span class="px-2 py-0.5 rounded-full text-xs font-bold ${h.successRate >= 80 ? 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800' : h.successRate >= 50 ? 'bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700'}">
+                            ${h.successRate}%
+                        </span>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function filterHospitalSummaryTable() {
+            const query = document.getElementById('searchHospitalTable').value.trim().toLowerCase();
+            const filtered = hospitalSummary.filter(h => h.name.toLowerCase().includes(query));
+            renderHospitalSummaryTable(filtered);
+        }
+
+        function renderCasesTable() {
+            const tbody = document.getElementById('casesTableBody');
+            tbody.innerHTML = '';
+
+            const total = filteredRecords.length;
+            document.getElementById('filteredRecordCount').innerText = `พบ ${total.toLocaleString()} รายการ`;
+
+            if (total === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="8" class="text-center py-12 text-slate-400 dark:text-slate-500">
+                            <i class="fa-solid fa-folder-open text-3xl mb-2 block"></i>
+                            ไม่พบข้อมูลตามเงื่อนไขการค้นหา
+                        </td>
+                    </tr>
+                `;
+                updatePaginationControls(0, 0, 0);
+                return;
+            }
+
+            const startIdx = (currentPage - 1) * pageSize;
+            const endIdx = Math.min(startIdx + pageSize, total);
+            const pageData = filteredRecords.slice(startIdx, endIdx);
+
+            pageData.forEach(r => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-teal-50/40 dark:hover:bg-slate-800/60 transition-colors border-b border-slate-100 dark:border-slate-800/80";
+                tr.innerHTML = `
+                    <td class="px-4 py-3 font-medium text-slate-600 dark:text-slate-400 text-xs">${escapeHtml(r.timestamp)}</td>
+                    <td class="px-4 py-3 font-medium text-slate-700 dark:text-slate-300">${escapeHtml(r.provId)}</td>
+                    <td class="px-4 py-3 font-bold text-teal-700 dark:text-teal-300 bg-teal-50/40 dark:bg-teal-950/40 border-x border-teal-100/60 dark:border-teal-900/40">${escapeHtml(r.minId)}</td>
+                    <td class="px-4 py-3 font-semibold text-slate-800 dark:text-slate-200">${escapeHtml(r.hn)}</td>
+                    <td class="px-4 py-3 font-semibold text-teal-800 dark:text-teal-300">${escapeHtml(r.hospital)}</td>
+                    <td class="px-4 py-3 text-slate-600 dark:text-slate-400 text-xs">${escapeHtml(r.reporter)}</td>
+                    <td class="px-4 py-3 text-center">${getStatusBadgeHTML(r.status)}</td>
+                    <td class="px-4 py-3 text-xs text-slate-500 dark:text-slate-400 max-w-xs">
+                        ${r.note && r.note !== '-' ? `
+                            <button onclick="openNoteModal('${escapeJsString(r.note)}')" class="text-teal-600 dark:text-teal-400 hover:text-teal-800 dark:hover:text-teal-200 font-medium underline flex items-center space-x-1">
+                                <i class="fa-solid fa-comment-dots"></i>
+                                <span class="truncate max-w-[120px] inline-block">${escapeHtml(r.note)}</span>
+                            </button>
+                        ` : '-'}
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            updatePaginationControls(startIdx + 1, endIdx, total);
+        }
+
+        function getStatusBadgeHTML(status) {
+            if (status === 'แก้ไขแล้ว') {
+                return `<span class="bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 text-xs px-2.5 py-1 rounded-full font-semibold inline-flex items-center"><i class="fa-solid fa-circle-check mr-1.5 text-emerald-600 dark:text-emerald-400"></i>แก้ไขแล้ว</span>`;
+            }
+            if (status === 'รอดำเนินการ') {
+                return `<span class="bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-700 text-xs px-2.5 py-1 rounded-full font-semibold inline-flex items-center"><i class="fa-solid fa-hourglass-start mr-1.5 text-amber-600 dark:text-amber-400"></i>รอดำเนินการ</span>`;
+            }
+            if (status === 'ตั้งเบิกแล้ว') {
+                return `<span class="bg-indigo-100 dark:bg-indigo-950/80 text-indigo-800 dark:text-indigo-300 border border-indigo-300 dark:border-indigo-700 text-xs px-2.5 py-1 rounded-full font-semibold inline-flex items-center"><i class="fa-solid fa-file-invoice-dollar mr-1.5 text-indigo-600 dark:text-indigo-400"></i>ตั้งเบิกแล้ว</span>`;
+            }
+            if (status === 'ไม่พบข้อมูลที่แจ้ง') {
+                return `<span class="bg-rose-100 dark:bg-rose-950/80 text-rose-800 dark:text-rose-300 border border-rose-300 dark:border-rose-700 text-xs px-2.5 py-1 rounded-full font-semibold inline-flex items-center"><i class="fa-solid fa-triangle-exclamation mr-1.5 text-rose-600 dark:text-rose-400"></i>ไม่พบข้อมูลที่แจ้ง</span>`;
+            }
+            return `<span class="bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-700 text-xs px-2.5 py-1 rounded-full font-semibold inline-flex items-center"><i class="fa-solid fa-circle-info mr-1.5 text-slate-500 dark:text-slate-400"></i>${escapeHtml(status)}</span>`;
+        }
+
+        function updatePaginationControls(start, end, total) {
+            document.getElementById('paginationInfo').innerText = `แสดง ${start} ถึง ${end} จาก ${total.toLocaleString()} รายการ`;
+            document.getElementById('currentPageNum').innerText = currentPage;
+
+            const maxPage = Math.ceil(total / pageSize) || 1;
+            document.getElementById('prevPageBtn').disabled = currentPage <= 1;
+            document.getElementById('nextPageBtn').disabled = currentPage >= maxPage;
+        }
+
+        function changePageSize() {
+            pageSize = parseInt(document.getElementById('rowsPerPage').value);
+            currentPage = 1;
+            renderCasesTable();
+        }
+
+        function prevPage() {
+            if (currentPage > 1) {
+                currentPage--;
+                renderCasesTable();
+            }
+        }
+
+        function nextPage() {
+            const maxPage = Math.ceil(filteredRecords.length / pageSize);
+            if (currentPage < maxPage) {
+                currentPage++;
+                renderCasesTable();
+            }
+        }
+
+        function sortTable(field) {
+            if (field === 'timestamp') {
+                sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+                filteredRecords.sort((a, b) => {
+                    return sortDirection === 'asc' 
+                        ? a.timestamp.localeCompare(b.timestamp)
+                        : b.timestamp.localeCompare(a.timestamp);
+                });
+                renderCasesTable();
+            }
+        }
+
+        function updateActiveFilterBadges(min, gen, status, hosp) {
+            const container = document.getElementById('filterTagContainer');
+            const parent = document.getElementById('activeFilterBadges');
+            const summaryText = document.getElementById('searchCriteriaSummary');
+            
+            if (container) container.innerHTML = '';
+
+            let count = 0;
+            let criteriaList = [];
+
+            if (min) {
+                if (container) container.innerHTML += `<span class="bg-teal-100 dark:bg-teal-900/60 text-teal-800 dark:text-teal-200 border border-teal-200 dark:border-teal-700 px-2 py-0.5 rounded-md font-medium">เลขกระทรวง: "${escapeHtml(min)}"</span>`;
+                criteriaList.push(`เลขกระทรวง "${min}"`);
+                count++;
+            }
+            if (gen) {
+                if (container) container.innerHTML += `<span class="bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200 px-2 py-0.5 rounded-md font-medium">คำค้น: "${escapeHtml(gen)}"</span>`;
+                criteriaList.push(`คำค้น "${gen}"`);
+                count++;
+            }
+            if (status !== 'ALL') {
+                if (container) container.innerHTML += `<span class="bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200 px-2 py-0.5 rounded-md font-medium">สถานะ: ${escapeHtml(status)}</span>`;
+                criteriaList.push(`สถานะ "${status}"`);
+                count++;
+            }
+            if (hosp !== 'ALL') {
+                if (container) container.innerHTML += `<span class="bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200 px-2 py-0.5 rounded-md font-medium">รพ.: ${escapeHtml(hosp)}</span>`;
+                criteriaList.push(`โรงพยาบาล "${hosp}"`);
+                count++;
+            }
+
+            if (count > 0) {
+                if (parent) parent.classList.remove('hidden');
+                if (summaryText) summaryText.innerText = `กำลังแสดงผลการค้นหาด้วยเงื่อนไข: ${criteriaList.join(' + ')}`;
+            } else {
+                if (parent) parent.classList.add('hidden');
+                if (summaryText) summaryText.innerText = `แสดงข้อมูลทั้งหมดในระบบ (${parsedRecords.length.toLocaleString()} เคส)`;
+            }
+        }
+
+        function scrollToCasesTable() {
+            document.getElementById('casesTableContainer').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function updateConnectionStatus(isOnline, message) {
+            const ping = document.getElementById('statusPing');
+            const text = document.getElementById('statusText');
+            text.innerText = message;
+            if (isOnline) {
+                ping.className = "w-2.5 h-2.5 rounded-full bg-emerald-500 pulse-emerald";
+            } else {
+                ping.className = "w-2.5 h-2.5 rounded-full bg-rose-500";
+            }
+        }
+
+        function setupAutoRefresh(seconds) {
+            if (autoRefreshTimer) clearInterval(autoRefreshTimer);
+            if (seconds > 0) {
+                autoRefreshTimer = setInterval(() => {
+                    fetchCSVData(false);
+                }, seconds * 1000);
+            }
+        }
+
+        function handleRefreshRateChange() {
+            const val = parseInt(document.getElementById('autoRefreshInterval').value);
+            setupAutoRefresh(val);
+        }
+
+        // Fallback Dataset for Buriram Province Health Network
+        function useMockFallbackData() {
+            console.warn("Using Fallback Buriram Province EMS Dataset");
+            const mock = [
+                { "ประทับเวลา": "16/10/2026 09:15", "เลขจังหวัด": "3101", "เลขกระทรวง": "EMS31-00101", "HN": "65001234", "แก้ไขข้อมูลจาก รพ. อะไร": "รพ.บุรีรัมย์", "ชื่อ-ตำแหน่ง ผู้แจ้งแก้ไขเคส": "ส.ต.อ.สมชาย ใจดี (นวก.สาธารณสุข)", "สถานะการแก้ไข": "แก้ไขแล้ว", "หมายเหตุ": "แก้ไขเวลาออกปฏิบัติการและประเภทผู้ป่วยเรียบร้อย" },
+                { "ประทับเวลา": "16/10/2026 10:20", "เลขจังหวัด": "3102", "เลขกระทรวง": "EMS31-00102", "HN": "66009876", "แก้ไขข้อมูลจาก รพ. อะไร": "รพ.นางรอง", "ชื่อ-ตำแหน่ง ผู้แจ้งแก้ไขเคส": "นางสาววิภาดา รักชาติ (เจ้าหน้าที่ EMS)", "สถานะการแก้ไข": "รอดำเนินการ", "หมายเหตุ": "ขอเปลี่ยนเลข HN และเพิ่มเติมอาการสำคัญ" },
+                { "ประทับเวลา": "16/10/2026 11:05", "เลขจังหวัด": "3103", "เลขกระทรวง": "EMS31-00103", "HN": "64005544", "แก้ไขข้อมูลจาก รพ. อะไร": "รพ.ประโคนชัย", "ชื่อ-ตำแหน่ง ผู้แจ้งแก้ไขเคส": "นายพงศธร มีมาก (จพ.สาธารณสุข)", "สถานะการแก้ไข": "ตั้งเบิกแล้ว", "หมายเหตุ": "อนุมัติข้อมูล และนำเข้าชุดข้อมูลตั้งเบิกงวดปัจจุบัน" },
+                { "ประทับเวลา": "16/10/2026 11:45", "เลขจังหวัด": "3104", "เลขกระทรวง": "EMS31-00104", "HN": "65007788", "แก้ไขข้อมูลจาก รพ. อะไร": "รพ.พุทไธสง", "ชื่อ-ตำแหน่ง ผู้แจ้งแก้ไขเคส": "นางสาวสิริพร สุขใจ (พยาบาลวิชาชีพ)", "สถานะการแก้ไข": "ไม่พบข้อมูลที่แจ้ง", "หมายเหตุ": "ตรวจสอบในระบบศูนย์รับแจ้งเหตุ ไม่พบเลขกระทรวงนี้" },
+                { "ประทับเวลา": "16/10/2026 12:30", "เลขจังหวัด": "3105", "เลขกระทรวง": "EMS31-00105", "HN": "66003322", "แก้ไขข้อมูลจาก รพ. อะไร": "รพ.ลำปลายมาศ", "ชื่อ-ตำแหน่ง ผู้แจ้งแก้ไขเคส": "นายอนุรักษ์ มั่นคง (นวก.สาธารณสุข)", "สถานะการแก้ไข": "แก้ไขแล้ว", "หมายเหตุ": "ปรับปรุงสิทธิ์การรักษาและสถานที่เกิดเหตุ" },
+                { "ประทับเวลา": "16/10/2026 13:10", "เลขจังหวัด": "3106", "เลขกระทรวง": "EMS31-00106", "HN": "65001122", "แก้ไขข้อมูลจาก รพ. อะไร": "รพ.สตึก", "ชื่อ-ตำแหน่ง ผู้แจ้งแก้ไขเคส": "นายวิชัย แก้วกาญจน์ (เวชกรฉุกเฉิน)", "สถานะการแก้ไข": "ตั้งเบิกแล้ว", "หมายเหตุ": "ผ่านการอนุมัติและออกเลขตั้งเบิกเรียบร้อย" },
+                { "ประทับเวลา": "16/10/2026 14:00", "เลขจังหวัด": "3107", "เลขกระทรวง": "EMS31-00107", "HN": "66004455", "แก้ไขข้อมูลจาก รพ. อะไร": "รพ.กระสัง", "ชื่อ-ตำแหน่ง ผู้แจ้งแก้ไขเคส": "นางสาวสุมาลี วงศ์สว่าง (พยาบาลวิชาชีพ)", "สถานะการแก้ไข": "รอดำเนินการ", "หมายเหตุ": "รอตรวจสอบเอกสารประกอบการตั้งเบิกเพิ่มเติม" },
+                { "ประทับเวลา": "16/10/2026 14:45", "เลขจังหวัด": "3108", "เลขกระทรวง": "EMS31-00108", "HN": "65008899", "แก้ไขข้อมูลจาก รพ. อะไร": "รพ.ละหานทราย", "ชื่อ-ตำแหน่ง ผู้แจ้งแก้ไขเคส": "นายธนกฤต ศรีสุข (เจ้าหน้าที่ศูนย์ส่งต่อ)", "สถานะการแก้ไข": "แก้ไขแล้ว", "หมายเหตุ": "แก้ไขประเภทเคสและรหัสวินิจฉัยโรคสำเร็จ" }
+            ];
+            processData(mock);
+            updateConnectionStatus(true, "แสดงข้อมูลตัวอย่าง (เครือข่าย รพ. บุรีรัมย์)");
+        }
+
+        // Modals Logic
+        function openSettingsModal() {
+            document.getElementById('settingsModal').classList.remove('hidden');
+        }
+
+        function closeSettingsModal() {
+            document.getElementById('settingsModal').classList.add('hidden');
+        }
+
+        function saveCustomSettings() {
+            const url = document.getElementById('customCsvUrl').value.trim();
+            if (url) {
+                currentCsvUrl = url;
+                fetchCSVData(true);
+            }
+            closeSettingsModal();
+        }
+
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            Papa.parse(file, {
+                header: true,
+                skipEmptyLines: true,
+                complete: function(results) {
+                    if (results.data && results.data.length > 0) {
+                        processData(results.data);
+                        updateConnectionStatus(true, `ไฟล์ในเครื่อง (${results.data.length} เคส)`);
+                        closeSettingsModal();
+                    }
+                }
+            });
+        }
+
+        function openNoteModal(noteText) {
+            document.getElementById('noteModalContent').innerText = noteText;
+            document.getElementById('noteModal').classList.remove('hidden');
+        }
+
+        function closeNoteModal() {
+            document.getElementById('noteModal').classList.add('hidden');
+        }
+
+        // Export Table to CSV
+        function exportToCSV() {
+            if (!filteredRecords || filteredRecords.length === 0) return;
+            
+            const csvRows = [];
+            csvRows.push(["Timestamp", "ProvinceCode", "MinistryCode", "HN", "Hospital", "Reporter", "Status", "Notes"]);
+
+            filteredRecords.forEach(r => {
+                csvRows.push([
+                    `"${r.timestamp}"`,
+                    `"${r.provId}"`,
+                    `"${r.minId}"`,
+                    `"${r.hn}"`,
+                    `"${r.hospital}"`,
+                    `"${r.reporter}"`,
+                    `"${r.status}"`,
+                    `"${r.note.replace(/"/g, '""')}"`
+                ]);
+            });
+
+            const csvContent = "\uFEFF" + csvRows.map(e => e.join(",")).join("\n");
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            link.setAttribute("download", `Buriram_EMS_Edit_Requests_${new Date().toISOString().slice(0,10)}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // Utility Functions
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        function escapeJsString(str) {
+            if (!str) return '';
+            return str.replace(/'/g, "\\'").replace(/"/g, '\\"').replace(/\n/g, ' ');
+        }
+    </script>
+</body>
+</html>
